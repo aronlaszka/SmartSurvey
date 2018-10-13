@@ -1,4 +1,10 @@
 # SECTION 3-------------------------------------------------------------------------------------
+import urllib.request
+from bs4 import BeautifulSoup
+import csv
+from random import randint
+from time import sleep
+
 # Remove blank lines in between data
 with open('etherscan1new.csv', 'r') as file_handle:
     lines = file_handle.readlines()
