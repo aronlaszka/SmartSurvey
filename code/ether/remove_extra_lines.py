@@ -1,14 +1,12 @@
-# SECTION 2-------------------------------------------------------------------------------------
-# Remove blank lines
-import csv
-
+# SECTION 3-------------------------------------------------------------------------------------
+# Remove blank lines in between data
 with open('etherscan1new.csv', 'r') as file_handle:
     lines = file_handle.readlines()
 with open('etherscanlist1new.csv', 'w') as file_handler:
     lines = filter(lambda x: x.strip(), lines)
     file_handler.writelines(lines)
 
-# Remove extra header rows starting with Address
+# Remove extra header rows starting with Address as they printed for every contract page
 rows = ['Address', 'Contract Name', 'Compiler', 'Balance', 'Tx count', 'Date verified']
 with open('etherscanlist1new.csv', 'r') as inp, open('etherscanlist2new.csv', 'w', newline='') as out:
     writer = csv.writer(out)
@@ -23,3 +21,16 @@ with open('etherscanlist2new.csv', 'r') as inp1, open('etherscanlist3new.csv', '
     writer.writeheader()
     lines = inp1.readlines()
     out1.writelines(lines)
+
+# Below section to remove contracts that were repeated while downloading
+# so that there are exactly 46187 as in screen-shot
+with open('etherscanlist3new.csv', 'r') as inFile, open('etherscanlist4new.csv', 'w') as outFile:
+    listLines = []
+    for line in inFile:
+        if line in listLines:
+            continue
+        else:
+            outFile.write(line)
+            listLines.append(line)
+outFile.close()
+inFile.close()
