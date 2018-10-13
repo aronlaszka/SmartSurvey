@@ -1,8 +1,13 @@
-import csv
-import urllib.request
+# SECTION 4-------------------------------------------------------------------------------------
+# Downloading individual html pages of the contract source code
 
-# waiting for list of contracts to be updated so that this code can be checked
-with open('etherscanlist3.csv') as csvfile:
+import urllib.request
+from bs4 import BeautifulSoup
+import csv
+from random import randint
+from time import sleep
+
+with open('etherscanlist4new.csv') as csvfile:
     reader = csv.DictReader(csvfile)
     for row in reader:
         Address = row['Address']
@@ -22,9 +27,14 @@ with open('etherscanlist3.csv') as csvfile:
         with open(str(Address) + ".htm", 'wb') as f_out:
             f_out.write(bytes(responseData))
 
-            # soup = BeautifulSoup(data, "lxml")
-            # for info in soup.findAll('pre', {'class': 'js-sourcecopyarea', 'id': 'editor'}):
-                # b = info.text.encode('utf-8')
-                # print(b)
-                # out_file.append(b)
+# SECTION 5 -----------------------------------------------------------------------------------------------
+# Looking only for the source code of the contract
 
+# for Address in reader:
+#     with open(str(Address) + ".htm", 'r', encoding='utf-8') as f_input:
+#         soup = BeautifulSoup(f_input, "html.parser")
+#         for info in soup.findAll('pre', {'class': 'js-sourcecopyarea', 'id': 'editor'}):
+#             b = info.text.encode('utf-8')
+#             print(b)
+#
+#     with open("sourcecode" + str(Address) + ".htm", 'r', encoding='utf-8') as f_output:
