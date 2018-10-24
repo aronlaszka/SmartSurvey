@@ -71,8 +71,9 @@ with open(r'etherscanlist4new.csv') as csvDataFile:
                         print(f"{x} not unique!  first: {d[f]}")
                     else:
                         d[f] = x + ".sol"
-                        # with open('etherscanlist4new.csv', 'r') as f_read, open(x + ".sol", 'w') as f_write:
-                        #     f_write.write(f)
+                        # creating the unique solidity files with addressname.sol
+                        with open('etherscanlist4new.csv', 'r') as f_read, open(x + ".sol", 'w') as f_write:
+                            f_write.write(f)
 
                         with open('etherscanlist4new.csv', 'r') as f_read1, open('etherscanlist5new.csv', 'w') as f_write1:
                             rows = []
