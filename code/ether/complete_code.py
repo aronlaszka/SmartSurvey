@@ -7,7 +7,7 @@ from random import randint
 from time import sleep
 
 maxpage = 461
-# looping through all 462 pages and reading
+# looping through all 456 pages and reading
 for page in range(1, maxpage + 1):
     # print(page)
     req = urllib.request.Request(url='https://etherscan.io/contractsVerified/' + str(page) + '?ps=100',
@@ -27,6 +27,11 @@ for page in range(1, maxpage + 1):
 
 # ------------------------------------------------------------------------------
 # SECTION 2 -----------------------------------------------------------------------------------------------
+import urllib.request
+from bs4 import BeautifulSoup
+import csv
+from random import randint
+from time import sleep
 
 for page in range(1, 463):
     with open(str(page) + ".htm", 'r', encoding='utf-8') as fin:
@@ -34,7 +39,6 @@ for page in range(1, 463):
         soup = BeautifulSoup(fin, "html.parser")
         rows = []
 
-# contract list html page has only one 'tbody' class so find that
         for row in soup.findAll('tbody')[0].findAll('tr'):
             # extract table section in verified contracts page
             Address = (row.findAll('a')[0].get_text())
@@ -59,7 +63,6 @@ for page in range(1, 463):
             print(u)
             rows.append(u)
 
-# now write all the table columns to a csv file
         with open('etherscan1new.csv', 'a') as csvfile:
             fieldnames = ['Address', 'Contract Name', 'Compiler', 'Balance', 'Tx count', 'Date verified']
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
@@ -107,26 +110,48 @@ inFile.close()
 
 # SECTION 4-------------------------------------------------------------------------------------
 # Downloading individual html pages of the contract source code
+# read the data from the downloaded CSV file.
 
-with open('etherscanlist4new.csv') as csvfile:
-    reader = csv.DictReader(csvfile)
-    for row in reader:
-        Address = row['Address']
-        # print(Address)
-        req = urllib.request.Request(url='https://etherscan.io/address/' + str(Address),
-                             data=None,
-                             headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_5) AppleWebKit/603.2.4 (KHTML, like Gecko) Version/10.1.1 Safari/603.2.4'
-                                      })
-        # Specify user agent to gain access
-        sleep(randint(8, 15))
-        # sleep used to slow down the url request
-        response = urllib.request.urlopen(req)
-        responseData = response.read()
-        # removed decode statement so that data is in bytes
-        print(responseData)
+# with open('etherscanlist4new.csv') as csvfile:
+#     reader = csv.DictReader(csvfile)
+#     for row in reader:
+#         Address = row['Address']
+#         print(Address)
+import urllib.request
+from bs4 import BeautifulSoup
+import csv
+from random import randint
+from time import sleep
 
-        with open(str(Address) + ".htm", 'wb') as f_out:
-            f_out.write(bytes(responseData))
+with open(r'etherscanlist4new.csv') as csvDataFile:
+    csvReader = csv.reader(csvDataFile)
+    for row in csvReader:
+        # print(row[0]) which is Address
+        data = [row[0] for row in csv.reader(csvDataFile)]
+        # data includes the numbers till n-1 for example [0:2] that displays 1st and second column
+        # of 0th/1st row in csv file
+        Address = data[0:46188]
+        for x in Address:
+            # print(x)
+            # Address = str(Address)
+            # print(type(Address))
+            # print(Address)
+            # print(type(Address))
+            # type of Address is list
+            req = urllib.request.Request(url='https://etherscan.io/address/' + x,
+                                 data=None,
+                                 headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_5) AppleWebKit/603.2.4 (KHTML, like Gecko) Version/10.1.1 Safari/603.2.4'
+                                          })
+            # Specify user agent to gain access
+            sleep(randint(3, 5))
+            # sleep used to slow down the url request
+            response = urllib.request.urlopen(req)
+            responseData = response.read()
+            # removed decode statement so that data is in bytes
+            print(responseData)
+
+            with open(x + ".htm", 'wb') as f_out:
+                f_out.write(bytes(responseData))
 
 # SECTION 5 -----------------------------------------------------------------------------------------------
 # Looking only for the source code of the contract
@@ -137,6 +162,10 @@ import re
 import pyparsing
 
 d = {}
+# Initializing dictionary d containing {sourcecode string f: x + .sol}
+uniques = {}
+# Initializing dictionary uniques to store addresses x with unique source codes
+
 
 with open(r'etherscanlist4new.csv') as csvDataFile:
     csvReader = csv.reader(csvDataFile)
@@ -145,11 +174,15 @@ with open(r'etherscanlist4new.csv') as csvDataFile:
         data = [row[0] for row in csv.reader(csvDataFile)]
         # data includes the numbers till n-1 for example [0:2] that displays 1st and second column
         # of 0th/1st row in csv file
-        Address = data[0:6] # 46188]
+        Address = data[0:46188] # 46188]
+        # print(type(Address))
+        # print(len(Address))
         for x in Address:
+            # print(type(x))
             # print(x) here x is all the 42 bit addresses
             # creating the solidity file
-            with open(x + ".htm", 'r', encoding='utf-8') as f_input: # open(x + ".sol", 'w', encoding='utf-8') as f_output:
+            with open(x + ".htm", 'r', encoding='utf-8') as f_input:
+                # open(x + ".sol", 'w', encoding='utf-8') as f_output:
                 # print(f_input)
                 soup = BeautifulSoup(f_input, "html.parser")
                 for info in soup.findAll('pre', {'class': 'js-sourcecopyarea', 'id': 'editor'}):
@@ -157,59 +190,43 @@ with open(r'etherscanlist4new.csv') as csvDataFile:
                     # # print(b)
                     # clean white space and tabs
                     b = b.replace(' ', '')
-                    comment = pyparsing.nestedExpr("/*", "*/").suppress()
-                    c = comment.transformString(b)
+                    # comment = pyparsing.nestedExpr("/*", "*/").suppress()
+                    # c = comment.transformString(b)
                     # print(c)
-                    c = c.split()
+                    c = b.split()
                     e = [x for x in c if not '//' in x]
                     f = ''.join(e)
                     f = f.replace(' ', '').replace('\n', '').strip().rstrip().lstrip()
                     # f is the string of the contract without whitespaces and comments
                     # print(f)
-
-                    # d[f] = 1
-
                     # print(d)
                     if f in d:
                         # print(d)
-                        print(f"{x} not unique!  first: {d[f]}")
+                        print(f"{x} not unique! first: {d[f]}")
                     else:
                         d[f] = x + ".sol"
+                        # print(d[f])
                         # creating the unique solidity files with addressname.sol
-                        # with open('etherscanlist4new.csv', 'r') as f_read, open(x + ".sol", 'w') as f_write:
-                        #     f_write.write(f)
+                        with open('etherscanlist4new.csv', 'r') as f_read, open(x + ".sol", 'w') as f_write:
+                            f_write.write(f)
+                        # uniques.append(d[f])
+                    uniques[x] = d[f] # assigning values of address dictionary to string dictionary
 
-                        with open('etherscanlist4new.csv', 'r') as f_read1, open('etherscanlist5new.csv', 'w') as f_write1:
-                            rows = []
-                            for row_all in f_read1:
-                                if row_all in rows:
-                                    continue
-                                else:
-                                    f_write1.write(row_all)
-                                    rows.append(row_all)
-                        f_read1.close()
-                        f_write1.close()
+with open('etherscanlist4new.csv', 'r') as csvinput, open('etherscanlist5new.csv',  'w') as csvoutput:
+    writer = csv.writer(csvoutput, lineterminator='\n')
+    reader = csv.reader(csvinput)
 
-                        with open('etherscanlist5new.csv', 'w') as f_write2:
-                            row[6] = d[f]
-                            rows.append(row[6])
-                            
-                        # with open('etherscanlist5new.csv', 'r') as fin_read, open('etherscanlist5new.csv', 'w') as fout_write:
-                        #     reader = csv.reader(fin_read)
-                        #     writer = csv.writer(fout_write)
-                        #     for row2 in reader:
-                        #         row[6] = d[f]
-                        #         writer.writerow(row2)
-                        #     fin_read.close()
-                        #     fout_write.close()
+    row = next(reader) # selecting row next to last row
+    row.append('Unique solidity files') # header
+    # all.append(row)
+    writer.writerow(row)
 
-                        # if f in d:
-                        #     # print(f)
-                        #     # print(len(d))
-                        #     print(f"{x} not unique! first: {d[f]}")
-                        #     # print("yes")
-                        # else:
-                        #     # write b in to file
-                        #     d[f] = x + ".sol"
-                        #     print(d[f])
-                        #     # f_output.write(f)
+    print(row)
+
+    for row in reader:
+        row.append(uniques[row[0]] if row[0] in uniques else '')
+        # appending unique files from addresses contracts in row 0
+        # all.append(row)
+        writer.writerow(row)
+
+    writer.writerow(row)
